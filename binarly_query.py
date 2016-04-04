@@ -188,12 +188,11 @@ def process_sign(args):
     else:
         result = BINOBJ.gen_ioc_hashes(args.files, status_callback=my_callback)
         
-    print(json.dumps(result))
     if 'error' in result or result['status'] != 'done':
         print(Style.BRIGHT + Fore.RED + "Request failed")
     else:
         print("Generated {0} signature(s) in {1:d}s".format(len(result.get('signatures',[])), result['stats']['time_ms']/1000))
-    #dump(result)
+
     reqid = result['reqid']
     
     yara_signatures = []
