@@ -40,7 +40,8 @@ hunt.add_argument('yarafile', type=str)
 sign = subparsers.add_parser('sign', help="Generate IOC on samples")
 sign.add_argument("files", type=str, nargs='+', help="Files/Hashes (md5/sha1/sha256) to send to signer")
 sign.add_argument("--patternCount", "-c", type=int, default=3, help="Specify the number of fragments in a generated rule", dest='fragcount')
-sign.add_argument("--strategy", "-s", type=str, choices=['none','strict'], help="Specify if the signture should be extracted from full file (none) or a subset (strict)", default='none')
+sign.add_argument("--strategy", "-s", type=str, choices=['none','strict'], help="Specify if the signature should be extracted from full file (none) or a subset (strict)", default='none')
+sign.add_argument("--cluster", help="Treat files as a cluster in order to minimize the number of generated signatures", action='store_true')
 sign.add_argument("--other", nargs='*', help="Specify additional options to send, in the form of a tuple (key, value)", default=[], action='store')
 
 sign.add_argument("--u", type=bool, help='Upload file(s) if missing', default=True)
@@ -188,7 +189,7 @@ def my_callback(response):
     print("{0} : Request status = {1:<10}".format(datetime.datetime.now(), response.get('status', None)))
 
 def process_sign(args):
-    sign_options = {'strategy' : args.strategy, 'frag_count':args.fragcount}
+    sign_options = {'strategy' : args.strategy, 'frag_count':args.fragcount, 'cluster':args.cluster}
     if os.path.exists(args.files[0]):
         filelist = args.files
         if os.path.isdir(args.files[0]):
