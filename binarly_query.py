@@ -4,7 +4,7 @@ import json
 import datetime
 import argparse
 import glob
-try:    
+try:
     from colorama import init, Fore, Back, Style
 except ImportError:
     print("Error importing colorama. Please make sure you have it (pip install colorama)")
@@ -17,6 +17,9 @@ except ImportError:
     sys.exit(-1)
 
 BINOBJ = None
+APIKEYFILENAME = 'apikey.txt'
+APIKEYPATH     = os.path.join(os.path.dirname(__file__), APIKEYFILENAME)
+
 APIKEY = ''
 
 parser = argparse.ArgumentParser(description='Binarly API Query')
@@ -52,7 +55,7 @@ fileinfo.add_argument("filehash", type=str, help="File hash (md5/sha1/sha256) to
 
 usage = subparsers.add_parser('demo', help="Show usage examples")
 
-LABEL_COLOR = { 
+LABEL_COLOR = {
     'clean':Style.BRIGHT + Fore.GREEN,
     'malware':Style.BRIGHT + Fore.RED,
     'pua':Style.BRIGHT + Fore.YELLOW,
@@ -130,24 +133,24 @@ def show_stats(stats):
 
 def process_search(args):
     search_query = []
-    for val in args.hex:        
+    for val in args.hex:
         search_query.append(hex_pattern(val.replace(' ', '')))
     for val in args.a:
-        search_query.append(ascii_pattern(val))        
+        search_query.append(ascii_pattern(val))
     for val in args.w:
         search_query.append(wide_pattern(val))
-        
+
     result = BINOBJ.search(search_query, limit=args.limit, exact=args.exact)
     if result.has_key('error'):
         print(Style.BRIGHT + Fore.RED + result['error']['message'])
-        return 
-    
+        return
+
     if result.has_key('stats'):
         show_stats(result['stats'])
-                
+
     if len(result['results']) == 0:
         return
-    print("Showing top {0} results:".format(args.limit))         
+    print("Showing top {0} results:".format(args.limit))
 
     show_results(result['results'])
 
@@ -173,51 +176,51 @@ def process_classify(args):
         else:
             show_row({'sha1':key, 'label':value.get('label', 'N/A'), 'family':value.get('family', 'N/A')})
     return
-    
-    
+
+
 def process_hunt(args):
     result = BINOBJ.yara_hunt(args.yarafile, my_callback)
     if result.has_key('stats'):
         show_stats(result['stats'])
-    show_results(result['results']) 
+    show_results(result['results'])
 
 def my_callback(response):
     print("{0} : Request status = {1:<10}".format(datetime.datetime.now(), response.get('status', None)))
-            
+
 def process_sign(args):
     sign_options = {'strategy' : args.strategy, 'frag_count':args.fragcount}
     if os.path.exists(args.files[0]):
         filelist = args.files
         if os.path.isdir(args.files[0]):
-            filelist = get_filelist(filelist[0])        
-            
+            filelist = get_filelist(filelist[0])
+
         result = BINOBJ.gen_ioc_files(filelist, options=sign_options, upload_missing=args.u, status_callback=my_callback)
     else:
         result = BINOBJ.gen_ioc_hashes(args.files, status_callback=my_callback)
-        
+
     if 'error' in result or result['status'] != 'done':
         print(Style.BRIGHT + Fore.RED + "Request failed")
     else:
         print("Generated {0} signature(s) in {1:d}s".format(len(result.get('signatures',[])), result['stats']['time_ms']/1000))
 
     reqid = result['reqid']
-    
+
     yara_signatures = []
     for idx,signature in enumerate(result.get('signatures', [])):
         sig_info = BINOBJ.get_request(signature['info'])
         with open("auto_{0}_{1}.json".format(reqid, idx), mode="w") as sigfile:
             sigfile.write(json.dumps(sig_info))
-        
+
         yarasig = BINOBJ.get_request(signature['yarasig'])
         yara_signatures.append(yarasig)
-        
+
         with open("auto_{0}.yar".format(reqid), mode="a") as sigfile:
             sigfile.write(yarasig)
-            
-        print("Sig #{0} - detects {1} indexed files from family: {2}{3}".format(idx, 
-                                                                        len(sig_info.get('samples', [])), 
-                                                                        LABEL_COLOR[sig_info.get('label', "malware")], 
-                                                                        sig_info.get('family', "N/A")))
+
+        print("Sig #{0} - detects {1} indexed files from family: {2}{3}".format(idx,
+                                                                                len(sig_info.get('samples', [])),
+                                                                                LABEL_COLOR[sig_info.get('label', "malware")],
+                                                                                sig_info.get('family', "N/A")))
 
     print("Signing results:")
     for filehash,info in result['results'].iteritems():
@@ -247,18 +250,26 @@ def process_metadata(args):
 def process_demo(args):
     return
 
+def read_apikey(filepath=APIKEYPATH):
+    global APIKEY
+
+    if not os.path.exists(filepath):
+        return False
+
+    with open(filepath, 'r') as f:
+        APIKEY = f.readline()
+
+    APIKEY = APIKEY.strip()
+    return True
+
 def init_api(args):
     global BINOBJ, APIKEY
-    key = APIKEY
 
-    if len(key) == 0 and len(args.key) == 0:
-        print("You need to provide an API access key. Register at https://binar.ly in order to receive one")
-        return
+    APIKEY = args.key
+    if len(APIKEY) == 0 and read_apikey() == False:
+        raise RuntimeError("You need to provide an API access key. Register at https://binar.ly in order to receive one")
 
-    if len(key) == 0:
-        key = args.key
-        
-    BINOBJ = BinarlyAPI(api_key=key, use_http=args.usehttp, project="BinarlyPyQuery")
+    BINOBJ = BinarlyAPI(api_key=APIKEY, use_http=args.usehttp, project="BinarlyPyQuery")
     return
 
 def main(args):
