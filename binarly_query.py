@@ -4,9 +4,17 @@ import json
 import datetime
 import argparse
 import glob
-from colorama import init, Fore, Back, Style
+try:    
+    from colorama import init, Fore, Back, Style
+except ImportError:
+    print("Error importing colorama. Please make sure you have it (pip install colorama)")
+    sys.exit(-1)
 
-from BinarlyAPIv1 import BinarlyAPI, hex_pattern, ascii_pattern, wide_pattern, build_query
+try:
+    from BinarlyAPIv1 import BinarlyAPI, hex_pattern, ascii_pattern, wide_pattern, build_query
+except ImportError:
+    print("Error importing BinarlyAPI. You can find it here https://github.com/binarlyhq/binarly-sdk")
+    sys.exit(-1)
 
 BINOBJ = None
 APIKEY = ''
@@ -43,7 +51,6 @@ fileinfo = subparsers.add_parser('metadata', help="Retrieve file metadata")
 fileinfo.add_argument("filehash", type=str, help="File hash (md5/sha1/sha256) to retrieve metadata")
 
 usage = subparsers.add_parser('demo', help="Show usage examples")
-
 
 LABEL_COLOR = { 
     'clean':Style.BRIGHT + Fore.GREEN,
@@ -220,6 +227,9 @@ def process_sign(args):
 
         print("Hash:{0}{1}{2} Status:{3}".format(Style.BRIGHT + Fore.WHITE, filehash, Style.RESET_ALL, status))
 
+    if len(yara_signatures) > 0:
+        print("\nPlease check {0} file for generated signature(s).".format("auto_{0}.yar".format(reqid)))
+        
     if args.yara:
         print "YARA Rules:"
         for rule in yara_signatures:
