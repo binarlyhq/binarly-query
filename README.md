@@ -158,7 +158,7 @@ If the rule is contained in a file named `shifu_banking_trojan.yar`:
 
 `binarly_query.py hunt shifu_banking_trojan.yar`
 
-Output:
+__Output:__
 
 ![Results](./images/hunt.jpg)
 
