@@ -32,8 +32,8 @@ The most basic operation that we expose is searching for binary and string patte
 * WIDE strings i.e `-w "Microsoft"`
 
 __Search options:__
-* `--exact` Filter out false positives.
-* `--limit=N` Limit search results to the first N. By default, this value is 20. Specifying a value of 0 means that only statistics (the number of files matching this pattern) will be returned.
+* `--exact` Filter out false positives. When this option is used, the statistics returned apply only to the current result limit.
+* `--limit=N` Limit search results to the first N. By default, this value is 20. Specifying a value of 0 means that only statistics (the number of files matching this pattern) will be returned. If `--exact` is not specified the statistics returned apply to all results, not only the ones displayed.
 
 Below is an example of searching for files that contain a combination of patterns, with default limit 20:
 * Hex sequence `"01 02 FF 03 04 FF"`
@@ -58,7 +58,7 @@ __Output:__
 
 ![Exact Search](./images/search_exact.jpg)
 
-__Best practice: try to use normal searches to reduce the number of matching files and, optionally,at the end use `exact` search to validate the results__
+__Best practice__: try to use normal searches to reduce the number of matching files and, optionally,at the end use `exact` search to validate the results
 
 # IOC Generation
 __Binarly__ provides an API to automatically generate [YARA](https://plusvic.github.io/yara/) rules that cover a specified set of files. The algorithm for selecting signature patterns has access to the entire universe of data indexed by the search engine, enabling it to identify the best signature candidate for a given file.
