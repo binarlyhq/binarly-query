@@ -120,8 +120,14 @@ rule auto_a50d5d0f_8fd1_4c61_a73c_8681bf05981f
 * One or more JSON files which contain signature information for each of the signatures generated:
     - signature `patterns`
     - hashes of the `files that are detected` by the signature
-    - `label of the detected files` (malware/unwanted softare)
+    - `label of the detected files` (malware/unwanted software)
     - `family name` for the malware files detected by this rule
+
+The signer has many safeguards in place in order to avoid generation of rules on known clean containers such as packers/protectors/installers.
+
+Example of sign attempt on a [SmartInstaller](http://www.sminstall.com) installer file (referenced by SHA256):
+
+![SmartInstaller Request](./images/signer_smartinstaller_detection.jpg)
 
 #Sample Hunting With YARA Signatures
 While `search` functionality allows one to search for files that contain a certain combination of query terms, you can use the `hunt` command for more complex queries. The sample hunting functionality works straight out of the box with most YARA rules already written.
