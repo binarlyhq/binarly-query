@@ -18,7 +18,7 @@ except ImportError:
 
 BINOBJ = None
 APIKEYFILENAME = 'apikey.txt'
-APIKEYPATH     = os.path.join(os.path.dirname(__file__), APIKEYFILENAME)
+APIKEYPATH = os.path.join(os.path.dirname(__file__), APIKEYFILENAME)
 
 APIKEY = ''
 
@@ -41,9 +41,9 @@ SIGN_PARSER = ARG_SUBPARSERS.add_parser('sign', help="Generate IOC on samples")
 SIGN_PARSER.add_argument("files", type=str, nargs='+', help="Files/Hashes (md5/sha1/sha256) to send to signer")
 
 SIGN_PARSER.add_argument("--patternCount", "-c", type=int, default=3, help="Specify the number of fragments in a generated rule", dest='fragcount')
-SIGN_PARSER.add_argument("--strategy", "-s", type=str, choices=['none','strict'], help="Specify if the signature should be extracted from full file (none) or a subset (strict)", default='none')
+SIGN_PARSER.add_argument("--strategy", "-s", type=str, choices=['none', 'strict'], help="Specify if the signature should be extracted from full file (none) or a subset (strict)", default='none')
 SIGN_PARSER.add_argument("--cluster", help="Treat files as a cluster in order to minimize the number of generated signatures", action='store_true')
-SIGN_PARSER.add_argument("--other",nargs='*', help="Specify additional options to send, in the form of a tuple (key, value)", default=[], action='store')
+SIGN_PARSER.add_argument("--other", nargs='*', help="Specify additional options to send, in the form of a tuple (key, value)", default=[], action='store')
 
 SIGN_PARSER.add_argument("--u", type=bool, help='Upload file(s) if missing', default=True)
 SIGN_PARSER.add_argument("--yara", help='Dump generated YARA signatures to screen', default=False, action="store_true")
@@ -67,7 +67,7 @@ LABEL_COLOR = {
 
 def dump(obj, nested_level=0, output=sys.stdout):
     spacing = '   '
-    if isinstance(obj,dict):
+    if isinstance(obj, dict):
         print >> output, '%s{' % ((nested_level) * spacing)
         for key, value in obj.items():
             if hasattr(value, '__iter__'):
@@ -76,7 +76,7 @@ def dump(obj, nested_level=0, output=sys.stdout):
             else:
                 print >> output, '%s%s: %s' % ((nested_level + 1) * spacing, key, value)
         print >> output, '%s}' % (nested_level * spacing)
-    elif isinstance(obj,list):
+    elif isinstance(obj, list):
         print >> output, '%s[' % ((nested_level) * spacing)
         for value in obj:
             if hasattr(value, '__iter__'):
@@ -88,7 +88,7 @@ def dump(obj, nested_level=0, output=sys.stdout):
         print >> output, '%s%s' % (nested_level * spacing, obj)
 
 def smart_size(size):
-    if not isinstance(size,int):
+    if not isinstance(size, int):
         return size
 
     if size >= 1024*1024*1024:
@@ -178,7 +178,7 @@ def process_classify(options):
             result['error']['code']))
         return
     print("-"*100)
-    for key,value in result['results'].iteritems():
+    for key, value in result['results'].iteritems():
         if 'error' in value:
             print("SHA1:{0}{1}{2} Error:{3}{4}".format(
                 Style.BRIGHT,
@@ -193,6 +193,11 @@ def process_classify(options):
 
 def process_hunt(options):
     result = BINOBJ.yara_hunt(options.yarafile, my_callback)
+    if 'error' in result or result['status'] != 'done':
+        print(Style.BRIGHT + Fore.RED + "Request failed.")
+        print(Style.BRIGHT + Fore.RED + "Fail reason: {0} (error code={1})".format(result['error']['message'], result['error']['code']))
+        return
+
     if result.has_key('stats'):
         show_stats(result['stats'])
     show_results(result['results'])
