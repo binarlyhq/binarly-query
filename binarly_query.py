@@ -98,7 +98,7 @@ def smart_size(size):
     elif size > 1024:
         return "{0:.2f} KB".format(float(size)/1024)
     else:
-        return "{0:B}".format(size)
+        return "{0} B".format(size)
 
 def get_filelist(dirname):
     return [x for x in glob.glob(os.path.join(dirname, '*')) if os.path.isfile(x)]
