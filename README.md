@@ -172,8 +172,6 @@ Constraints:
 * Only one YARA rule per request is allowed
 
 Current limitations:
-* Regular expression are not supported (yet)
-* Count (`#`) operator is not supported (yet)
 * YARA rules without strings is not supported
 
 #File classification
