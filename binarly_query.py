@@ -7,13 +7,17 @@ import glob
 try:
     from colorama import init, Fore, Back, Style
 except ImportError:
-    print("Error importing colorama. Please make sure you have it (pip install colorama)")
+    print(
+        "Error importing colorama. Please make sure you have it (pip install colorama)"
+    )
     sys.exit(-1)
 
 try:
     from BinarlyAPIv1 import BinarlyAPI, hex_pattern, ascii_pattern, wide_pattern, build_query
 except ImportError:
-    print("Error importing BinarlyAPI. You can find it here https://github.com/binarlyhq/binarly-sdk")
+    print(
+        "Error importing BinarlyAPI. You can find it here https://github.com/binarlyhq/binarly-sdk"
+    )
     sys.exit(-1)
 
 BINOBJ = None
@@ -24,46 +28,115 @@ APIKEY = ''
 
 ARGPARSER = argparse.ArgumentParser(description='Binarly API Query')
 ARGPARSER.add_argument("--key", "-k", help="Binarly APIKey", default='')
-ARGPARSER.add_argument("--usehttp", "-u", help="Use HTTP instead of HTTPS when communicating. By default HTTPS is used.", action="store_true")
+ARGPARSER.add_argument("--server",
+                       "-s",
+                       help="Set Binarly API endpoint",
+                       default='www.binar.ly')
+
+ARGPARSER.add_argument(
+    "--usehttp",
+    "-u",
+    help=
+    "Use HTTP instead of HTTPS when communicating. By default HTTPS is used.",
+    action="store_true")
 ARG_SUBPARSERS = ARGPARSER.add_subparsers(help='commands', dest='commands')
 
-SEARCH_PARSER = ARG_SUBPARSERS.add_parser('search', help="Search arbitrary hex patterns")
+SEARCH_PARSER = ARG_SUBPARSERS.add_parser('search',
+                                          help="Search arbitrary hex patterns")
 SEARCH_PARSER.add_argument("hex", type=str, nargs='*', default=[])
-SEARCH_PARSER.add_argument("-a", type=str, nargs='*', help="ASCII string to search", default=[])
-SEARCH_PARSER.add_argument("-w", type=str, nargs='*', help="WIDE string to search", default=[])
-SEARCH_PARSER.add_argument("--limit", type=int, default=20, help="Limit the number of results returned. If 0 only statistics are returned")
-SEARCH_PARSER.add_argument("--exact", action='store_true', help="Validate search results")
+SEARCH_PARSER.add_argument("-a",
+                           type=str,
+                           nargs='*',
+                           help="ASCII string to search",
+                           default=[])
+SEARCH_PARSER.add_argument("-w",
+                           type=str,
+                           nargs='*',
+                           help="WIDE string to search",
+                           default=[])
+SEARCH_PARSER.add_argument(
+    "--limit",
+    type=int,
+    default=20,
+    help=
+    "Limit the number of results returned. If 0 only statistics are returned")
+SEARCH_PARSER.add_argument("--exact",
+                           action='store_true',
+                           help="Validate search results")
 
-HUNT_PARSER = ARG_SUBPARSERS.add_parser('hunt', help='Hunt for files using YARA rules')
+HUNT_PARSER = ARG_SUBPARSERS.add_parser('hunt',
+                                        help='Hunt for files using YARA rules')
 HUNT_PARSER.add_argument('yarafile', type=str)
 
 SIGN_PARSER = ARG_SUBPARSERS.add_parser('sign', help="Generate IOC on samples")
-SIGN_PARSER.add_argument("files", type=str, nargs='+', help="Files/Hashes (md5/sha1/sha256) to send to signer")
+SIGN_PARSER.add_argument(
+    "files",
+    type=str,
+    nargs='+',
+    help="Files/Hashes (md5/sha1/sha256) to send to signer")
 
-SIGN_PARSER.add_argument("--patternCount", "-c", type=int, default=3, help="Specify the number of fragments in a generated rule", dest='fragcount')
-SIGN_PARSER.add_argument("--strategy", "-s", type=str, choices=['none', 'strict'], help="Specify if the signature should be extracted from full file (none) or a subset (strict)", default='none')
-SIGN_PARSER.add_argument("--cluster", help="Treat files as a cluster in order to minimize the number of generated signatures", action='store_true')
-SIGN_PARSER.add_argument("--other", nargs='*', help="Specify additional options to send, in the form of a tuple (key, value)", default=[], action='store')
+SIGN_PARSER.add_argument(
+    "--patternCount",
+    "-c",
+    type=int,
+    default=3,
+    help="Specify the number of fragments in a generated rule",
+    dest='fragcount')
+SIGN_PARSER.add_argument(
+    "--strategy",
+    "-s",
+    type=str,
+    choices=['none', 'strict'],
+    help=
+    "Specify if the signature should be extracted from full file (none) or a subset (strict)",
+    default='none')
+SIGN_PARSER.add_argument(
+    "--cluster",
+    help=
+    "Treat files as a cluster in order to minimize the number of generated signatures",
+    action='store_true')
+SIGN_PARSER.add_argument(
+    "--other",
+    nargs='*',
+    help=
+    "Specify additional options to send, in the form of a tuple (key, value)",
+    default=[],
+    action='store')
 
-SIGN_PARSER.add_argument("--u", type=bool, help='Upload file(s) if missing', default=True)
-SIGN_PARSER.add_argument("--yara", help='Dump generated YARA signatures to screen', default=False, action="store_true")
+SIGN_PARSER.add_argument("--u",
+                         type=bool,
+                         help='Upload file(s) if missing',
+                         default=True)
+SIGN_PARSER.add_argument("--yara",
+                         help='Dump generated YARA signatures to screen',
+                         default=False,
+                         action="store_true")
 
-CLASSIFY_PARSER = ARG_SUBPARSERS.add_parser('classify', help="Classify samples using Machine Learning")
+CLASSIFY_PARSER = ARG_SUBPARSERS.add_parser(
+    'classify', help="Classify samples using Machine Learning")
 CLASSIFY_PARSER.add_argument("files", type=str, nargs='+')
-CLASSIFY_PARSER.add_argument("-u", type=bool, help='Upload file(s) if missing', default=True)
+CLASSIFY_PARSER.add_argument("-u",
+                             type=bool,
+                             help='Upload file(s) if missing',
+                             default=True)
 
-FILEINFO_PARSER = ARG_SUBPARSERS.add_parser('metadata', help="Retrieve file metadata")
-FILEINFO_PARSER.add_argument("filehash", type=str, help="File hash (md5/sha1/sha256) to retrieve metadata")
+FILEINFO_PARSER = ARG_SUBPARSERS.add_parser('metadata',
+                                            help="Retrieve file metadata")
+FILEINFO_PARSER.add_argument(
+    "filehash",
+    type=str,
+    help="File hash (md5/sha1/sha256) to retrieve metadata")
 
 USAGE_PARSER = ARG_SUBPARSERS.add_parser('demo', help="Show usage examples")
 
 LABEL_COLOR = {
-    'clean':Style.BRIGHT + Fore.GREEN,
-    'malware':Style.BRIGHT + Fore.RED,
-    'pua':Style.BRIGHT + Fore.YELLOW,
-    'unknown':Style.BRIGHT + Fore.CYAN,
-    'suspicious':Style.BRIGHT + Fore.MAGENTA
+    'clean': Style.BRIGHT + Fore.GREEN,
+    'malware': Style.BRIGHT + Fore.RED,
+    'pua': Style.BRIGHT + Fore.YELLOW,
+    'unknown': Style.BRIGHT + Fore.CYAN,
+    'suspicious': Style.BRIGHT + Fore.MAGENTA
 }
+
 
 def dump(obj, nested_level=0, output=sys.stdout):
     spacing = '   '
@@ -74,7 +147,8 @@ def dump(obj, nested_level=0, output=sys.stdout):
                 print >> output, '%s%s:' % ((nested_level + 1) * spacing, key)
                 dump(value, nested_level + 1, output)
             else:
-                print >> output, '%s%s: %s' % ((nested_level + 1) * spacing, key, value)
+                print >> output, '%s%s: %s' % ((nested_level + 1) * spacing,
+                                               key, value)
         print >> output, '%s}' % (nested_level * spacing)
     elif isinstance(obj, list):
         print >> output, '%s[' % ((nested_level) * spacing)
@@ -87,21 +161,25 @@ def dump(obj, nested_level=0, output=sys.stdout):
     else:
         print >> output, '%s%s' % (nested_level * spacing, obj)
 
+
 def smart_size(size):
     if not isinstance(size, int):
         return size
 
-    if size >= 1024*1024*1024:
-        return "{0:.2f} GB".format(float(size)/(1024*1024*1024))
-    elif size >= 1024*1024:
-        return "{0:.2f}MB".format(float(size)/(1024*1024))
+    if size >= 1024 * 1024 * 1024:
+        return "{0:.2f} GB".format(float(size) / (1024 * 1024 * 1024))
+    elif size >= 1024 * 1024:
+        return "{0:.2f}MB".format(float(size) / (1024 * 1024))
     elif size > 1024:
-        return "{0:.2f} KB".format(float(size)/1024)
+        return "{0:.2f} KB".format(float(size) / 1024)
     else:
         return "{0} B".format(size)
 
+
 def get_filelist(dirname):
-    return [x for x in glob.glob(os.path.join(dirname, '*')) if os.path.isfile(x)]
+    return [x for x in glob.glob(os.path.join(dirname, '*'))
+            if os.path.isfile(x)]
+
 
 def show_row(val):
     color = Fore.WHITE
@@ -117,20 +195,21 @@ def show_row(val):
         val.get(u'family', "N/A").title(),
         Style.BRIGHT + Fore.WHITE, size))
 
+
 def show_results(results):
-    print("-"*100)
+    print("-" * 100)
     for val in results:
         show_row(val)
 
+
 def show_stats(stats):
-    print("Found {0} results : {1}{2} clean {3}{4} malware {5}{6} PUA {7}{8} unknown {9}{10} suspicious".format(
-        stats['total_count'],
-        LABEL_COLOR['clean'], stats['clean_count'],
-        LABEL_COLOR['malware'], stats['malware_count'],
-        LABEL_COLOR['pua'], stats['pua_count'],
-        LABEL_COLOR['unknown'], stats['unknown_count'],
-        LABEL_COLOR['suspicious'], stats['suspicious_count']
-        ))
+    print(
+        "Found {0} results : {1}{2} clean {3}{4} malware {5}{6} PUA {7}{8} unknown {9}{10} suspicious".format(
+            stats['total_count'], LABEL_COLOR['clean'], stats['clean_count'],
+            LABEL_COLOR['malware'], stats['malware_count'], LABEL_COLOR['pua'],
+            stats['pua_count'], LABEL_COLOR['unknown'], stats['unknown_count'],
+            LABEL_COLOR['suspicious'], stats['suspicious_count']))
+
 
 def process_search(options):
     search_query = []
@@ -141,7 +220,9 @@ def process_search(options):
     for val in options.w:
         search_query.append(wide_pattern(val))
 
-    result = BINOBJ.search(search_query, limit=options.limit, exact=options.exact)
+    result = BINOBJ.search(search_query,
+                           limit=options.limit,
+                           exact=options.exact)
     if result.has_key('error'):
         print(Style.BRIGHT + Fore.RED + result['error']['message'])
         return
@@ -155,13 +236,16 @@ def process_search(options):
 
     show_results(result['results'])
 
+
 def process_classify(options):
     if os.path.exists(options.files[0]):
         filelist = options.files
         if os.path.isdir(options.files[0]):
             filelist = get_filelist(filelist[0])
 
-        result = BINOBJ.classify_files(filelist, upload_missing=options.u, status_callback=my_callback)
+        result = BINOBJ.classify_files(filelist,
+                                       upload_missing=options.u,
+                                       status_callback=my_callback)
     else:
         result = BINOBJ.classify_hashes(options.files)
 
@@ -173,21 +257,20 @@ def process_classify(options):
     reqid = result.get('results', None)
     if reqid is None:
         # the request failed before any files could be analyzed
-        print(Style.BRIGHT + Fore.RED + "Fail reason: {0} (error code={1})".format(
-            result['error']['message'],
-            result['error']['code']))
+        print(Style.BRIGHT + Fore.RED +
+              "Fail reason: {0} (error code={1})".format(
+                  result['error']['message'], result['error']['code']))
         return
-    print("-"*100)
+    print("-" * 100)
     for key, value in result['results'].iteritems():
         if 'error' in value:
             print("SHA1:{0}{1}{2} Error:{3}{4}".format(
-                Style.BRIGHT,
-                key,
-                Style.RESET_ALL,
-                Style.BRIGHT + Fore.RED,
+                Style.BRIGHT, key, Style.RESET_ALL, Style.BRIGHT + Fore.RED,
                 value['error']['message']))
         else:
-            show_row({'sha1':key, 'label':value.get('label', 'N/A'), 'family':value.get('family', 'N/A')})
+            show_row({'sha1': key,
+                      'label': value.get('label', 'N/A'),
+                      'family': value.get('family', 'N/A')})
     return
 
 
@@ -195,20 +278,25 @@ def process_hunt(options):
     result = BINOBJ.yara_hunt(options.yarafile, my_callback)
     if 'error' in result or result['status'] != 'done':
         print(Style.BRIGHT + Fore.RED + "Request failed.")
-        print(Style.BRIGHT + Fore.RED + "Fail reason: {0} (error code={1})".format(result['error']['message'], result['error']['code']))
+        print(Style.BRIGHT + Fore.RED +
+              "Fail reason: {0} (error code={1})".format(
+                  result['error']['message'], result['error']['code']))
         return
 
     if result.has_key('stats'):
         show_stats(result['stats'])
     show_results(result['results'])
 
+
 def my_callback(response):
-    print("{0} : Request status = {1:<10}".format(datetime.datetime.now(), response.get('status', None)))
+    print("{0} : Request status = {1:<10}".format(
+        datetime.datetime.now(), response.get('status', None)))
+
 
 def process_sign(options):
-    sign_options = {'strategy' : options.strategy,
-                    'frag_count':options.fragcount,
-                    'cluster':options.cluster}
+    sign_options = {'strategy': options.strategy,
+                    'frag_count': options.fragcount,
+                    'cluster': options.cluster}
 
     if os.path.exists(options.files[0]):
         filelist = options.files
@@ -220,19 +308,22 @@ def process_sign(options):
                                       upload_missing=options.u,
                                       status_callback=my_callback)
     else:
-        result = BINOBJ.gen_ioc_hashes(options.files, status_callback=my_callback)
+        result = BINOBJ.gen_ioc_hashes(options.files,
+                                       status_callback=my_callback)
 
     if 'error' in result or result['status'] != 'done':
         print(Style.BRIGHT + Fore.RED + "Request failed.")
     else:
         print("Generated {0} signature(s) in {1:d}s".format(
             len(result.get('signatures', [])),
-            result['stats']['time_ms']/1000))
+            result['stats']['time_ms'] / 1000))
 
     reqid = result.get('reqid', None)
     if reqid is None:
         # the request failed before any files could be analyzed
-        print(Style.BRIGHT + Fore.RED + "Fail reason: {0} (error code={1})".format(result['error']['message'], result['error']['code']))
+        print(Style.BRIGHT + Fore.RED +
+              "Fail reason: {0} (error code={1})".format(
+                  result['error']['message'], result['error']['code']))
         return
 
     yara_signatures = []
@@ -247,11 +338,11 @@ def process_sign(options):
         with open("auto_{0}.yar".format(reqid), mode="a") as sigfile:
             sigfile.write(yarasig)
 
-        print("Sig #{0} - detects {1} indexed files from family: {2}{3}".format(
-            idx,
-            len(sig_info.get('samples', [])),
-            LABEL_COLOR[sig_info.get('label', "malware")],
-            sig_info.get('family', "N/A")))
+        print(
+            "Sig #{0} - detects {1} indexed files from family: {2}{3}".format(
+                idx, len(sig_info.get('samples', [])),
+                LABEL_COLOR[sig_info.get('label', "malware")],
+                sig_info.get('family', "N/A")))
 
     print("Signing results:")
     for filehash, info in result['results'].iteritems():
@@ -259,10 +350,8 @@ def process_sign(options):
         if info['status'] != 'signed':
             status = Fore.RED + "Failed ({0})".format(info['error']['message'])
 
-        print("Hash:{0}{1}{2} Status:{3}".format(Style.BRIGHT,
-                                                 filehash,
-                                                 Style.RESET_ALL,
-                                                 status))
+        print("Hash:{0}{1}{2} Status:{3}".format(Style.BRIGHT, filehash,
+                                                 Style.RESET_ALL, status))
 
     if len(yara_signatures) > 0:
         print("\nPlease check {0} file for generated signature(s).".format(
@@ -274,6 +363,7 @@ def process_sign(options):
             print rule
     return
 
+
 def process_metadata(options):
     result = BINOBJ.get_metadata(options.filehash)
     if result.has_key('error'):
@@ -282,8 +372,10 @@ def process_metadata(options):
 
     dump(result[options.filehash])
 
+
 def process_demo(options):
     return
+
 
 def read_apikey(filepath=APIKEYPATH):
     global APIKEY
@@ -297,15 +389,21 @@ def read_apikey(filepath=APIKEYPATH):
     APIKEY = APIKEY.strip()
     return True
 
+
 def init_api(options):
     global BINOBJ, APIKEY
 
     APIKEY = options.key
     if len(APIKEY) == 0 and read_apikey() is False:
-        raise RuntimeError("You need to provide an API access key. Register at https://binar.ly in order to receive one")
+        raise RuntimeError(
+            "You need to provide an API access key. Register at https://binar.ly in order to receive one")
 
-    BINOBJ = BinarlyAPI(api_key=APIKEY, use_http=options.usehttp, project="BinarlyPyQuery")
+    BINOBJ = BinarlyAPI(server=options.server,
+                        api_key=APIKEY,
+                        use_http=options.usehttp,
+                        project="BinarlyPyQuery")
     return
+
 
 def main(options):
     init_api(options)
@@ -324,6 +422,7 @@ def main(options):
         return process_demo(options)
     else:
         print("Unknown command {0}".format(cmd))
+
 
 if __name__ == "__main__":
     init(autoreset=True)
