@@ -26,7 +26,7 @@ APIKEYPATH = os.path.join(os.path.dirname(__file__), APIKEYFILENAME)
 
 APIKEY = ''
 
-ARGPARSER = argparse.ArgumentParser(description='Binarly API Query')
+ARGPARSER = argparse.ArgumentParser(description='Binarly API Query', fromfile_prefix_chars="@")
 ARGPARSER.add_argument("--key", "-k", help="Binarly APIKey", default='')
 ARGPARSER.add_argument("--server",
                        "-s",
