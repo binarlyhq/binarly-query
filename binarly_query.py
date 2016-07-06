@@ -183,17 +183,20 @@ def get_filelist(dirname):
 
 def show_row(val):
     color = Fore.WHITE
-    label = None
+    label = "N/A"
     if val.has_key(u'label'):
         color = LABEL_COLOR.get(val['label'], Fore.WHITE)
         label = val[u'label']
 
     size = smart_size(val.get(u'size', "N/A"))
-    print("SHA1:{0}{1}{2} Label:{3}{4:11}{2} Family:{3}{5:10} {2}Size:{0}{6}{7}".format(\
-        Style.BRIGHT, val['sha1'],
-        Style.RESET_ALL, color, label.title(),
-        val.get(u'family', "N/A").title(),
-        Style.BRIGHT + Fore.WHITE, size))
+    try:
+        print("SHA1:{0}{1}{2} Label:{3}{4:11}{2} Family:{3}{5:10} {2}Size:{0}{6}{7}".format(\
+            Style.BRIGHT, val['sha1'],
+            Style.RESET_ALL, color, label.title(),
+            val.get(u'family', "N/A").title(),
+            Style.BRIGHT + Fore.WHITE, size))
+    except:
+        pass
 
 
 def show_results(results):
