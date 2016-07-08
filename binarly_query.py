@@ -5,7 +5,7 @@ import datetime
 import argparse
 import glob
 try:
-    from colorama import init, Fore, Back, Style
+    from colorama import init, Fore, Style
 except ImportError:
     print(
         "Error importing colorama. Please make sure you have it (pip install colorama)"
@@ -13,7 +13,7 @@ except ImportError:
     sys.exit(-1)
 
 try:
-    from BinarlyAPIv1 import BinarlyAPI, hex_pattern, ascii_pattern, wide_pattern, build_query
+    from BinarlyAPIv1 import BinarlyAPI, hex_pattern, ascii_pattern, wide_pattern
 except ImportError:
     print(
         "Error importing BinarlyAPI. You can find it here https://github.com/binarlyhq/binarly-sdk"
@@ -195,7 +195,7 @@ def show_row(val):
             Style.RESET_ALL, color, label.title(),
             val.get(u'family', "N/A").title(),
             Style.BRIGHT + Fore.WHITE, size))
-    except:
+    except Exception as e:
         pass
 
 
@@ -238,8 +238,6 @@ def process_search(options):
     print("Showing top {0} results:".format(options.limit))
 
     show_results(result['results'])
-
-
 def process_classify(options):
     if os.path.exists(options.files[0]):
         filelist = options.files
@@ -407,7 +405,6 @@ def init_api(options):
                         project="BinarlyPyQuery")
     return
 
-
 def main(options):
     init_api(options)
     cmd = options.commands
@@ -425,7 +422,6 @@ def main(options):
         return process_demo(options)
     else:
         print("Unknown command {0}".format(cmd))
-
 
 if __name__ == "__main__":
     init(autoreset=True)
