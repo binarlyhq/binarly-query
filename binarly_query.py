@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import os
 import sys
 import json
@@ -26,46 +27,36 @@ APIKEYPATH = os.path.join(os.path.dirname(__file__), APIKEYFILENAME)
 
 APIKEY = ''
 
-ARGPARSER = argparse.ArgumentParser(description='Binarly API Query', fromfile_prefix_chars="@")
+ARGPARSER = argparse.ArgumentParser(
+    description='Binarly API Query', fromfile_prefix_chars="@")
 ARGPARSER.add_argument("--key", "-k", help="Binarly APIKey", default='')
-ARGPARSER.add_argument("--server",
-                       "-s",
-                       help="Set Binarly API endpoint",
-                       default='www.binar.ly')
+ARGPARSER.add_argument(
+    "--server", "-s", help="Set Binarly API endpoint", default='www.binar.ly')
 
 ARGPARSER.add_argument(
     "--usehttp",
     "-u",
-    help=
-    "Use HTTP instead of HTTPS when communicating. By default HTTPS is used.",
+    help="Use HTTP instead of HTTPS when communicating. By default HTTPS is used.",
     action="store_true")
 ARG_SUBPARSERS = ARGPARSER.add_subparsers(help='commands', dest='commands')
 
-SEARCH_PARSER = ARG_SUBPARSERS.add_parser('search',
-                                          help="Search arbitrary hex patterns")
+SEARCH_PARSER = ARG_SUBPARSERS.add_parser(
+    'search', help="Search arbitrary hex patterns")
 SEARCH_PARSER.add_argument("hex", type=str, nargs='*', default=[])
-SEARCH_PARSER.add_argument("-a",
-                           type=str,
-                           nargs='*',
-                           help="ASCII string to search",
-                           default=[])
-SEARCH_PARSER.add_argument("-w",
-                           type=str,
-                           nargs='*',
-                           help="WIDE string to search",
-                           default=[])
+SEARCH_PARSER.add_argument(
+    "-a", type=str, nargs='*', help="ASCII string to search", default=[])
+SEARCH_PARSER.add_argument(
+    "-w", type=str, nargs='*', help="WIDE string to search", default=[])
 SEARCH_PARSER.add_argument(
     "--limit",
     type=int,
     default=20,
-    help=
-    "Limit the number of results returned. If 0 only statistics are returned")
-SEARCH_PARSER.add_argument("--exact",
-                           action='store_true',
-                           help="Validate search results")
+    help="Limit the number of results returned. If 0 only statistics are returned")
+SEARCH_PARSER.add_argument(
+    "--exact", action='store_true', help="Validate search results")
 
-HUNT_PARSER = ARG_SUBPARSERS.add_parser('hunt',
-                                        help='Hunt for files using YARA rules')
+HUNT_PARSER = ARG_SUBPARSERS.add_parser(
+    'hunt', help='Hunt for files using YARA rules')
 HUNT_PARSER.add_argument('yarafile', type=str)
 
 SIGN_PARSER = ARG_SUBPARSERS.add_parser('sign', help="Generate IOC on samples")
@@ -87,41 +78,35 @@ SIGN_PARSER.add_argument(
     "-s",
     type=str,
     choices=['none', 'strict'],
-    help=
-    "Specify if the signature should be extracted from full file (none) or a subset (strict)",
+    help="Specify if the signature should be extracted from full file (none) or a subset (strict)",
     default='none')
 SIGN_PARSER.add_argument(
     "--cluster",
-    help=
-    "Treat files as a cluster in order to minimize the number of generated signatures",
+    help="Treat files as a cluster in order to minimize the number of generated signatures",
     action='store_true')
 SIGN_PARSER.add_argument(
     "--other",
     nargs='*',
-    help=
-    "Specify additional options to send, in the form of a tuple (key, value)",
+    help="Specify additional options to send, in the form of a tuple (key, value)",
     default=[],
     action='store')
 
-SIGN_PARSER.add_argument("--u",
-                         type=bool,
-                         help='Upload file(s) if missing',
-                         default=True)
-SIGN_PARSER.add_argument("--yara",
-                         help='Dump generated YARA signatures to screen',
-                         default=False,
-                         action="store_true")
+SIGN_PARSER.add_argument(
+    "--u", type=bool, help='Upload file(s) if missing', default=True)
+SIGN_PARSER.add_argument(
+    "--yara",
+    help='Dump generated YARA signatures to screen',
+    default=False,
+    action="store_true")
 
 CLASSIFY_PARSER = ARG_SUBPARSERS.add_parser(
     'classify', help="Classify samples using Machine Learning")
 CLASSIFY_PARSER.add_argument("files", type=str, nargs='+')
-CLASSIFY_PARSER.add_argument("-u",
-                             type=bool,
-                             help='Upload file(s) if missing',
-                             default=True)
+CLASSIFY_PARSER.add_argument(
+    "-u", type=bool, help='Upload file(s) if missing', default=True)
 
-FILEINFO_PARSER = ARG_SUBPARSERS.add_parser('metadata',
-                                            help="Retrieve file metadata")
+FILEINFO_PARSER = ARG_SUBPARSERS.add_parser(
+    'metadata', help="Retrieve file metadata")
 FILEINFO_PARSER.add_argument(
     "filehash",
     type=str,
@@ -184,8 +169,8 @@ def get_filelist(dirname):
 def show_row(val):
     color = Fore.WHITE
     label = "N/A"
-    if val.has_key(u'label'):
-        color = LABEL_COLOR.get(val['label'], Fore.WHITE)
+    if u'label' in val:
+        color = LABEL_COLOR.get(val[u'label'], Fore.WHITE)
         label = val[u'label']
 
     size = smart_size(val.get(u'size', "N/A"))
@@ -207,11 +192,12 @@ def show_results(results):
 
 def show_stats(stats):
     print(
-        "Found {0} results : {1}{2} clean {3}{4} malware {5}{6} PUA {7}{8} unknown {9}{10} suspicious".format(
-            stats['total_count'], LABEL_COLOR['clean'], stats['clean_count'],
-            LABEL_COLOR['malware'], stats['malware_count'], LABEL_COLOR['pua'],
-            stats['pua_count'], LABEL_COLOR['unknown'], stats['unknown_count'],
-            LABEL_COLOR['suspicious'], stats['suspicious_count']))
+        "Found {0} results : {1}{2} clean {3}{4} malware {5}{6} PUA {7}{8} unknown {9}{10} suspicious".
+        format(stats['total_count'], LABEL_COLOR['clean'],
+               stats['clean_count'], LABEL_COLOR['malware'],
+               stats['malware_count'], LABEL_COLOR['pua'], stats['pua_count'],
+               LABEL_COLOR['unknown'], stats['unknown_count'],
+               LABEL_COLOR['suspicious'], stats['suspicious_count']))
 
 
 def process_search(options):
@@ -223,14 +209,13 @@ def process_search(options):
     for val in options.w:
         search_query.append(wide_pattern(val))
 
-    result = BINOBJ.search(search_query,
-                           limit=options.limit,
-                           exact=options.exact)
-    if result.has_key('error'):
+    result = BINOBJ.search(
+        search_query, limit=options.limit, exact=options.exact)
+    if 'error' in result:
         print(Style.BRIGHT + Fore.RED + result['error']['message'])
         return
 
-    if result.has_key('stats'):
+    if 'stats' in result:
         show_stats(result['stats'])
 
     if len(result['results']) == 0:
@@ -238,15 +223,16 @@ def process_search(options):
     print("Showing top {0} results:".format(options.limit))
 
     show_results(result['results'])
+
+
 def process_classify(options):
     if os.path.exists(options.files[0]):
         filelist = options.files
         if os.path.isdir(options.files[0]):
             filelist = get_filelist(filelist[0])
 
-        result = BINOBJ.classify_files(filelist,
-                                       upload_missing=options.u,
-                                       status_callback=my_callback)
+        result = BINOBJ.classify_files(
+            filelist, upload_missing=options.u, status_callback=my_callback)
     else:
         result = BINOBJ.classify_hashes(options.files)
 
@@ -284,7 +270,7 @@ def process_hunt(options):
                   result['error']['message'], result['error']['code']))
         return
 
-    if result.has_key('stats'):
+    if 'stats' in result:
         show_stats(result['stats'])
     show_results(result['results'])
 
@@ -304,13 +290,14 @@ def process_sign(options):
         if os.path.isdir(options.files[0]):
             filelist = get_filelist(filelist[0])
 
-        result = BINOBJ.gen_ioc_files(filelist,
-                                      options=sign_options,
-                                      upload_missing=options.u,
-                                      status_callback=my_callback)
+        result = BINOBJ.gen_ioc_files(
+            filelist,
+            options=sign_options,
+            upload_missing=options.u,
+            status_callback=my_callback)
     else:
-        result = BINOBJ.gen_ioc_hashes(options.files,
-                                       status_callback=my_callback)
+        result = BINOBJ.gen_ioc_hashes(
+            options.files, status_callback=my_callback)
 
     if 'error' in result or result['status'] != 'done':
         print(Style.BRIGHT + Fore.RED + "Request failed.")
@@ -367,7 +354,7 @@ def process_sign(options):
 
 def process_metadata(options):
     result = BINOBJ.get_metadata(options.filehash)
-    if result.has_key('error'):
+    if 'error' in result:
         print(Style.BRIGHT + Fore.RED + result['error']['message'])
         return
 
@@ -397,13 +384,15 @@ def init_api(options):
     APIKEY = options.key
     if len(APIKEY) == 0 and read_apikey() is False:
         raise RuntimeError(
-            "You need to provide an API access key. Register at https://binar.ly in order to receive one")
+            "You need to provide an API access key. \Register at https://binar.ly in order to receive one")
 
-    BINOBJ = BinarlyAPI(server=options.server,
-                        api_key=APIKEY,
-                        use_http=options.usehttp,
-                        project="BinarlyPyQuery")
+    BINOBJ = BinarlyAPI(
+        server=options.server,
+        api_key=APIKEY,
+        use_http=options.usehttp,
+        project="BinarlyPyQuery")
     return
+
 
 def main(options):
     init_api(options)
@@ -422,6 +411,7 @@ def main(options):
         return process_demo(options)
     else:
         print("Unknown command {0}".format(cmd))
+
 
 if __name__ == "__main__":
     init(autoreset=True)
