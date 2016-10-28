@@ -5,6 +5,7 @@ import json
 import datetime
 import argparse
 import glob
+
 try:
     from colorama import init, Fore, Style
 except ImportError:
@@ -136,7 +137,7 @@ def dump(obj, nested_level=0, output=sys.stdout):
                                                key, value)
         print >> output, '%s}' % (nested_level * spacing)
     elif isinstance(obj, list):
-        print >> output, '%s[' % ((nested_level) * spacing)
+        print >> output, '%s[' % (nested_level * spacing)
         for value in obj:
             if hasattr(value, '__iter__'):
                 dump(value, nested_level + 1, output)
@@ -149,16 +150,19 @@ def dump(obj, nested_level=0, output=sys.stdout):
 
 def smart_size(size):
     if not isinstance(size, int):
-        return size
+        try:
+            size = int(size)
+        except:
+            pass
 
     if size >= 1024 * 1024 * 1024:
-        return "{0:.2f} GB".format(float(size) / (1024 * 1024 * 1024))
+        return "{0:.2f}GB".format(float(size) / (1024 * 1024 * 1024))
     elif size >= 1024 * 1024:
         return "{0:.2f}MB".format(float(size) / (1024 * 1024))
     elif size > 1024:
-        return "{0:.2f} KB".format(float(size) / 1024)
+        return "{0:.2f}KB".format(float(size) / 1024)
     else:
-        return "{0} B".format(size)
+        return "{0}B".format(size)
 
 
 def get_filelist(dirname):
@@ -172,16 +176,11 @@ def show_row(val):
     if u'label' in val:
         color = LABEL_COLOR.get(val[u'label'], Fore.WHITE)
         label = val[u'label']
+        val[u'label'] = "%s%s%s"%(color, label, Style.RESET_ALL)
 
-    size = smart_size(val.get(u'size', "N/A"))
-    try:
-        print("SHA1:{0}{1}{2} Label:{3}{4:11}{2} Family:{3}{5:10} {2}Size:{0}{6}{7}".format(\
-            Style.BRIGHT, val['sha1'],
-            Style.RESET_ALL, color, label.title(),
-            val.get(u'family', "N/A").title(),
-            Style.BRIGHT + Fore.WHITE, size))
-    except Exception as e:
-        pass
+    val['family'] = "%s%s%s"%(color, val.get('family', "N/A"), Style.RESET_ALL)
+    val['size'] = smart_size(val.get(u'size', "N/A"))
+    print " ".join(["%s%s%s:%s"%(Style.NORMAL, x.capitalize(), Style.BRIGHT, y) for (x, y) in val.items()])
 
 
 def show_results(results):
@@ -384,7 +383,7 @@ def init_api(options):
     APIKEY = options.key
     if len(APIKEY) == 0 and read_apikey() is False:
         raise RuntimeError(
-            "You need to provide an API access key. \Register at https://binar.ly in order to receive one")
+            "You need to provide an API access key. Register at https://binar.ly in order to receive one")
 
     BINOBJ = BinarlyAPI(
         server=options.server,
