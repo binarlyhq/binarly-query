@@ -6,6 +6,13 @@ import datetime
 import argparse
 import glob
 
+
+try:
+    from tabulate import tabulate
+    HAS_TABULATE = True
+except ImportError:
+    HAS_TABULATE = False
+
 try:
     from colorama import init, Fore, Style
 except ImportError:
@@ -39,6 +46,14 @@ ARGPARSER.add_argument(
     "-u",
     help="Use HTTP instead of HTTPS when communicating. By default HTTPS is used.",
     action="store_true")
+
+ARGPARSER.add_argument(
+    "--pretty-print",
+    "-p",
+    help="Display results in a nicely formated table (Requires tabulate python module)",
+    action="store_true"
+)
+
 ARG_SUBPARSERS = ARGPARSER.add_subparsers(help='commands', dest='commands')
 
 SEARCH_PARSER = ARG_SUBPARSERS.add_parser(
@@ -153,7 +168,7 @@ def smart_size(size):
         try:
             size = int(size)
         except:
-            pass
+            return size
 
     if size >= 1024 * 1024 * 1024:
         return "{0:.2f}GB".format(float(size) / (1024 * 1024 * 1024))
@@ -170,23 +185,31 @@ def get_filelist(dirname):
             if os.path.isfile(x)]
 
 
-def show_row(val):
+def color_row(row):
     color = Fore.WHITE
-    label = "N/A"
-    if u'label' in val:
-        color = LABEL_COLOR.get(val[u'label'], Fore.WHITE)
-        label = val[u'label']
-        val[u'label'] = "%s%s%s"%(color, label, Style.RESET_ALL)
+    label = "."
+    if u'label' in row:
+        color = LABEL_COLOR.get(row[u'label'], Fore.WHITE)
+        label = row[u'label']
+        row[u'label'] = "%s%s%s"%(color, label, Style.RESET_ALL)
 
-    val['family'] = "%s%s%s"%(color, val.get('family', "N/A"), Style.RESET_ALL)
-    val['size'] = smart_size(val.get(u'size', "N/A"))
-    print " ".join(["%s%s%s:%s"%(Style.NORMAL, x.capitalize(), Style.BRIGHT, y) for (x, y) in val.items()])
+    row['family'] = "%s%s%s"%(color, row.get('family', "."), Style.RESET_ALL)
+    row['size'] = smart_size(row.get(u'size', "."))
+    return row
+
+def show_row(row):
+    row = color_row(row)
+    print " ".join(["%s%s%s:%s"%(Style.NORMAL, x.capitalize(), Style.BRIGHT, y) for (x, y) in row.items()])
 
 
-def show_results(results):
-    print("-" * 100)
-    for val in results:
-        show_row(val)
+def show_results(results, pretty_print):
+    if pretty_print:
+        [color_row(x) for x in results]
+        print tabulate(results, headers="keys", tablefmt="grid", stralign="right")
+    else:
+        print("-" * 100)
+        for val in results:
+            show_row(val)
 
 
 def show_stats(stats):
@@ -219,9 +242,9 @@ def process_search(options):
 
     if len(result['results']) == 0:
         return
+    
     print("Showing top {0} results:".format(options.limit))
-
-    show_results(result['results'])
+    show_results(result['results'], pretty_print=options.pretty_print)
 
 
 def process_classify(options):
@@ -247,16 +270,22 @@ def process_classify(options):
               "Fail reason: {0} (error code={1})".format(
                   result['error']['message'], result['error']['code']))
         return
-    print("-" * 100)
+    
+    classify_data = []
     for key, value in result['results'].iteritems():
+        status = Style.RESET_ALL + Fore.GREEN + "OK" + Style.RESET_ALL
         if 'error' in value:
-            print("SHA1:{0}{1}{2} Error:{3}{4}".format(
-                Style.BRIGHT, key, Style.RESET_ALL, Style.BRIGHT + Fore.RED,
-                value['error']['message']))
-        else:
-            show_row({'sha1': key,
-                      'label': value.get('label', 'N/A'),
-                      'family': value.get('family', 'N/A')})
+            status = Fore.RED + value['error']['message'] + Style.RESET_ALL
+        row = {'SHA1':key, 'label': value.get('label', '.'), 'family': value.get('family', '.'), 'Status':status}
+        
+        classify_data.append(row)
+
+    if options.pretty_print:
+        show_results(classify_data, pretty_print=options.pretty_print)
+    else:
+        print("-" * 100)
+        for row in classify_data:
+            show_row(row)
     return
 
 
@@ -271,7 +300,9 @@ def process_hunt(options):
 
     if 'stats' in result:
         show_stats(result['stats'])
-    show_results(result['results'])
+    
+    if len(result['results']) > 0:
+        show_results(result['results'], pretty_print=options.pretty_print)
 
 
 def my_callback(response):
@@ -394,6 +425,10 @@ def init_api(options):
 
 
 def main(options):
+    if options.pretty_print and not HAS_TABULATE:
+        print Style.BRIGHT + Fore.RED + "Pretty printing requires tabulate python module. (pip install tabulate)"
+        return
+    
     init_api(options)
     cmd = options.commands
     if cmd == 'search':
