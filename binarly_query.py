@@ -224,12 +224,9 @@ def show_stats(stats):
 
 def process_search(options):
     search_query = []
-    for val in options.hex:
-        search_query.append(hex_pattern(val.replace(' ', '')))
-    for val in options.a:
-        search_query.append(ascii_pattern(val))
-    for val in options.w:
-        search_query.append(wide_pattern(val))
+    search_query.extend([hex_pattern(val.replace(' ', '')) for val in options.hex])
+    search_query.extend([ascii_pattern(val) for val in options.a])
+    search_query.extend([wide_pattern(val) for val in options.w])
 
     result = BINOBJ.search(
         search_query, limit=options.limit, exact=options.exact)
@@ -242,8 +239,12 @@ def process_search(options):
 
     if len(result['results']) == 0:
         return
-    
-    print("Showing top {0} results:".format(options.limit))
+
+    if len(result['results']) >= options.limit:
+        print("Showing top {0} results:".format(options.limit))
+    else:
+        print("Results:")
+
     show_results(result['results'], pretty_print=options.pretty_print)
 
 
@@ -270,14 +271,14 @@ def process_classify(options):
               "Fail reason: {0} (error code={1})".format(
                   result['error']['message'], result['error']['code']))
         return
-    
+
     classify_data = []
     for key, value in result['results'].iteritems():
         status = Style.RESET_ALL + Fore.GREEN + "OK" + Style.RESET_ALL
         if 'error' in value:
             status = Fore.RED + value['error']['message'] + Style.RESET_ALL
         row = {'SHA1':key, 'label': value.get('label', '.'), 'family': value.get('family', '.'), 'Status':status}
-        
+
         classify_data.append(row)
 
     if options.pretty_print:
@@ -300,7 +301,7 @@ def process_hunt(options):
 
     if 'stats' in result:
         show_stats(result['stats'])
-    
+
     if len(result['results']) > 0:
         show_results(result['results'], pretty_print=options.pretty_print)
 
@@ -428,24 +429,23 @@ def main(options):
     if options.pretty_print and not HAS_TABULATE:
         print Style.BRIGHT + Fore.RED + "Pretty printing requires tabulate python module. (pip install tabulate)"
         return
-    
+
     init_api(options)
     cmd = options.commands
-    if cmd == 'search':
-        return process_search(options)
-    elif cmd == 'hunt':
-        return process_hunt(options)
-    elif cmd == 'sign':
-        return process_sign(options)
-    elif cmd == 'classify':
-        return process_classify(options)
-    elif cmd == 'metadata':
-        return process_metadata(options)
-    elif cmd == 'demo':
-        return process_demo(options)
-    else:
-        print("Unknown command {0}".format(cmd))
 
+    switcher = {
+        'search'  : process_search,
+        'hunt'    : process_hunt,
+        'sign'    : process_sign,
+        'classify': process_classify,
+        'metadata': process_metadata,
+        'demo'    : process_demo
+    }
+
+    # Get the function from switcher dictionary
+    process_fn = switcher.get(cmd)
+    # Execute the function
+    return process_fn(options)
 
 if __name__ == "__main__":
     init(autoreset=True)
