@@ -171,13 +171,13 @@ def smart_size(size):
             return size
 
     if size >= 1024 * 1024 * 1024:
-        return "{0:6.2f}GB".format(float(size) / (1024 * 1024 * 1024))
+        return "{0:>7.2f}GB".format(float(size) / (1024 * 1024 * 1024))
     elif size >= 1024 * 1024:
-        return "{0:6.2f}MB".format(float(size) / (1024 * 1024))
+        return "{0:>7.2f}MB".format(float(size) / (1024 * 1024))
     elif size > 1024:
-        return "{0:6.2f}KB".format(float(size) / 1024)
+        return "{0:>7.2f}KB".format(float(size) / 1024)
     else:
-        return "{0:6.0i}B".format(size)
+        return "{0:>8d}B".format(int(size))
 
 
 def get_filelist(dirname):
