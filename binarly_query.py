@@ -70,10 +70,14 @@ SEARCH_PARSER.add_argument(
     help="Limit the number of results returned. If 0 only statistics are returned")
 SEARCH_PARSER.add_argument(
     "--exact", action='store_true', help="Validate search results")
+SEARCH_PARSER.add_argument(
+    "--test", action='store_true', help="Run in test environment")
 
 HUNT_PARSER = ARG_SUBPARSERS.add_parser(
     'hunt', help='Hunt for files using YARA rules')
 HUNT_PARSER.add_argument('yarafile', type=str)
+HUNT_PARSER.add_argument(
+    "--test", action='store_true', help="Run in test environment")
 
 SIGN_PARSER = ARG_SUBPARSERS.add_parser('sign', help="Generate IOC on samples")
 SIGN_PARSER.add_argument(
@@ -229,7 +233,7 @@ def process_search(options):
     search_query.extend([wide_pattern(val) for val in options.w])
 
     result = BINOBJ.search(
-        search_query, limit=options.limit, exact=options.exact)
+        search_query, limit=options.limit, exact=options.exact, test=options.test)
     if 'error' in result:
         print(Style.BRIGHT + Fore.RED + result['error']['message'])
         return
@@ -291,7 +295,7 @@ def process_classify(options):
 
 
 def process_hunt(options):
-    result = BINOBJ.yara_hunt(options.yarafile, my_callback)
+    result = BINOBJ.yara_hunt(options.yarafile, options.test, my_callback)
     if 'error' in result or result['status'] != 'done':
         print(Style.BRIGHT + Fore.RED + "Request failed.")
         print(Style.BRIGHT + Fore.RED +
