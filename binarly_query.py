@@ -6,9 +6,9 @@ import datetime
 import argparse
 import glob
 
-
 try:
     from tabulate import tabulate
+
     HAS_TABULATE = True
 except ImportError:
     HAS_TABULATE = False
@@ -146,7 +146,7 @@ LABEL_COLOR = {
 def dump(obj, nested_level=0, output=sys.stdout):
     spacing = '   '
     if isinstance(obj, dict):
-        print >> output, '%s{' % ((nested_level) * spacing)
+        print >> output, '%s{' % (nested_level * spacing)
         for key, value in obj.items():
             if hasattr(value, '__iter__'):
                 print >> output, '%s%s:' % ((nested_level + 1) * spacing, key)
@@ -162,7 +162,7 @@ def dump(obj, nested_level=0, output=sys.stdout):
                 dump(value, nested_level + 1, output)
             else:
                 print >> output, '%s%s' % ((nested_level + 1) * spacing, value)
-        print >> output, '%s]' % ((nested_level) * spacing)
+        print >> output, '%s]' % (nested_level * spacing)
     else:
         print >> output, '%s%s' % (nested_level * spacing, obj)
 
@@ -171,7 +171,7 @@ def smart_size(size):
     if not isinstance(size, int):
         try:
             size = int(size)
-        except:
+        except ValueError:
             return size
 
     if size >= 1024 * 1024 * 1024:
@@ -195,15 +195,16 @@ def color_row(row):
     if u'label' in row:
         color = LABEL_COLOR.get(row[u'label'], Fore.WHITE)
         label = row[u'label']
-        row[u'label'] = "%s%s%s"%(color, label, Style.RESET_ALL)
+        row[u'label'] = "%s%s%s" % (color, label, Style.RESET_ALL)
 
-    row['family'] = "%s%s%s"%(color, row.get('family', "."), Style.RESET_ALL)
+    row['family'] = "%s%s%s" % (color, row.get('family', "."), Style.RESET_ALL)
     row['size'] = smart_size(row.get(u'size', "."))
     return row
 
+
 def show_row(row):
     row = color_row(row)
-    print " ".join(["%s%s%s:%s"%(Style.NORMAL, x.capitalize(), Style.BRIGHT, y) for (x, y) in row.items()])
+    print(" ".join(["%s%s%s:%s" % (Style.NORMAL, x.capitalize(), Style.BRIGHT, y) for (x, y) in row.items()]))
 
 
 def show_results(results, pretty_print):
@@ -219,11 +220,11 @@ def show_results(results, pretty_print):
 def show_stats(stats):
     print(
         "Found {0} results : {1}{2} clean {3}{4} malware {5}{6} PUA {7}{8} unknown {9}{10} suspicious".
-        format(stats['total_count'], LABEL_COLOR['clean'],
-               stats['clean_count'], LABEL_COLOR['malware'],
-               stats['malware_count'], LABEL_COLOR['pua'], stats['pua_count'],
-               LABEL_COLOR['unknown'], stats['unknown_count'],
-               LABEL_COLOR['suspicious'], stats['suspicious_count']))
+            format(stats['total_count'], LABEL_COLOR['clean'],
+                   stats['clean_count'], LABEL_COLOR['malware'],
+                   stats['malware_count'], LABEL_COLOR['pua'], stats['pua_count'],
+                   LABEL_COLOR['unknown'], stats['unknown_count'],
+                   LABEL_COLOR['suspicious'], stats['suspicious_count']))
 
 
 def process_search(options):
@@ -281,7 +282,7 @@ def process_classify(options):
         status = Style.RESET_ALL + Fore.GREEN + "OK" + Style.RESET_ALL
         if 'error' in value:
             status = Fore.RED + value['error']['message'] + Style.RESET_ALL
-        row = {'SHA1':key, 'label': value.get('label', '.'), 'family': value.get('family', '.'), 'Status':status}
+        row = {'SHA1': key, 'label': value.get('label', '.'), 'family': value.get('family', '.'), 'Status': status}
 
         classify_data.append(row)
 
@@ -431,25 +432,26 @@ def init_api(options):
 
 def main(options):
     if options.pretty_print and not HAS_TABULATE:
-        print Style.BRIGHT + Fore.RED + "Pretty printing requires tabulate python module. (pip install tabulate)"
+        print(Style.BRIGHT + Fore.RED + "Pretty printing requires tabulate python module. (pip install tabulate)")
         return
 
     init_api(options)
     cmd = options.commands
 
     switcher = {
-        'search'  : process_search,
-        'hunt'    : process_hunt,
-        'sign'    : process_sign,
+        'search': process_search,
+        'hunt': process_hunt,
+        'sign': process_sign,
         'classify': process_classify,
         'metadata': process_metadata,
-        'demo'    : process_demo
+        'demo': process_demo
     }
 
     # Get the function from switcher dictionary
     process_fn = switcher.get(cmd)
     # Execute the function
     return process_fn(options)
+
 
 if __name__ == "__main__":
     init(autoreset=True)
