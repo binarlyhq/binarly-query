@@ -1,10 +1,10 @@
 #!/usr/bin/env python
+import argparse
+import datetime
+import glob
+import json
 import os
 import sys
-import json
-import datetime
-import argparse
-import glob
 
 try:
     from tabulate import tabulate
@@ -60,9 +60,9 @@ SEARCH_PARSER = ARG_SUBPARSERS.add_parser(
     'search', help="Search arbitrary hex patterns")
 SEARCH_PARSER.add_argument("hex", type=str, nargs='*', default=[])
 SEARCH_PARSER.add_argument(
-    "-a", type=str, nargs='*', help="ASCII string to search", default=[])
+    "-a", nargs="*", help="ASCII string to search", default=[], action="append")
 SEARCH_PARSER.add_argument(
-    "-w", type=str, nargs='*', help="WIDE string to search", default=[])
+    "-w", nargs="*", help="WIDE string to search", default=[], action="append")
 SEARCH_PARSER.add_argument(
     "--limit",
     type=int,
@@ -219,19 +219,39 @@ def show_results(results, pretty_print):
 
 def show_stats(stats):
     print(
-        "Found {0} results : {1}{2} clean {3}{4} malware {5}{6} PUA {7}{8} unknown {9}{10} suspicious".
-            format(stats['total_count'], LABEL_COLOR['clean'],
-                   stats['clean_count'], LABEL_COLOR['malware'],
-                   stats['malware_count'], LABEL_COLOR['pua'], stats['pua_count'],
-                   LABEL_COLOR['unknown'], stats['unknown_count'],
-                   LABEL_COLOR['suspicious'], stats['suspicious_count']))
+        "Found {0} results : {1}{2} clean {3}{4} malware {5}{6} PUA {7}{8} unknown {9}{10} suspicious".format(
+            stats['total_count'], LABEL_COLOR['clean'],
+            stats['clean_count'], LABEL_COLOR['malware'],
+            stats['malware_count'], LABEL_COLOR['pua'], stats['pua_count'],
+            LABEL_COLOR['unknown'], stats['unknown_count'],
+            LABEL_COLOR['suspicious'], stats['suspicious_count'])
+    )
+
+
+def show_stats_new(stats, limit):
+    if stats['total_count'] > limit:
+        print(
+            "Results [{0}/{1}] : {2}{3} clean {4}{5} malware {6}{7} PUA {8}{9} unknown {10}{11} suspicious".format(
+                limit, stats['total_count'], LABEL_COLOR['clean'],
+                stats['clean_count'], LABEL_COLOR['malware'],
+                stats['malware_count'], LABEL_COLOR['pua'], stats['pua_count'],
+                LABEL_COLOR['unknown'], stats['unknown_count'],
+                LABEL_COLOR['suspicious'], stats['suspicious_count']))
+    else:
+        print(
+            "Results [{0}/{0}] : {1}{2} clean {3}{4} malware {5}{6} PUA {7}{8} unknown {9}{10} suspicious".format(
+                stats['total_count'], LABEL_COLOR['clean'],
+                stats['clean_count'], LABEL_COLOR['malware'],
+                stats['malware_count'], LABEL_COLOR['pua'], stats['pua_count'],
+                LABEL_COLOR['unknown'], stats['unknown_count'],
+                LABEL_COLOR['suspicious'], stats['suspicious_count']))
 
 
 def process_search(options):
     search_query = []
     search_query.extend([hex_pattern(val.replace(' ', '')) for val in options.hex])
-    search_query.extend([ascii_pattern(val) for val in options.a])
-    search_query.extend([wide_pattern(val) for val in options.w])
+    search_query.extend([ascii_pattern(val) for lst in options.a for val in lst])
+    search_query.extend([wide_pattern(val) for lst in options.w for val in lst])
 
     result = BINOBJ.search(
         search_query, limit=options.limit, exact=options.exact, test=options.test)
@@ -240,15 +260,15 @@ def process_search(options):
         return
 
     if 'stats' in result:
-        show_stats(result['stats'])
+        show_stats_new(result['stats'], options.limit)
 
     if len(result['results']) == 0:
         return
 
-    if len(result['results']) >= options.limit:
-        print("Showing top {0} results:".format(options.limit))
-    else:
-        print("Results:")
+#    if len(result['results']) >= options.limit:
+#        print("Showing top {0} results:".format(options.limit))
+#    else:
+#        print("Results:")
 
     show_results(result['results'], pretty_print=options.pretty_print)
 
